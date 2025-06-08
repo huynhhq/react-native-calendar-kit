@@ -75,8 +75,31 @@ You can set the minimum and maximum date for the calendar using the `minDate` an
 - `minDate` and `maxDate` are used to set the range of dates that can be selected. Default `minDate` is 2 years ago and `maxDate` is 2 years from today.
 - `initialDate` is used to set the initial date of the calendar. It must be within the range set by `minDate` and `maxDate`. Default is `today`.
 > Default calendar will scroll to current date, so if you set `initialDate`, you need to set `scrollToNow={false}` to prevent it from scrolling to the current date.
-> 
+>
 > `initialDate` only affects the initially displayed date, please use [goToDate](./methods#gotodate) method to change the date after the calendar is mounted.
+
+## Initial Time Position
+
+You can control the initial scroll position of the calendar timeline using the `initialHour` prop. This is useful when you want the calendar to start at a specific time instead of the current time.
+
+```tsx
+<CalendarContainer
+    scrollToNow={false}
+    initialHour={8}
+    minDate="2024-01-01"
+    maxDate="2024-12-31"
+    initialDate="2024-03-11">
+    <CalendarHeader />
+    <CalendarBody />
+</CalendarContainer>
+```
+
+### Important Notes
+
+- `initialHour` only takes effect when `scrollToNow={false}`
+- Use decimal values for minutes: `8.5` = 8:30 AM, `14.25` = 2:15 PM
+- The hour should be within your calendar's time range (`start` and `end` props)
+- If `initialHour` is not specified and `scrollToNow={false}`, the calendar will not auto-scroll
 
 ```tsx
 <CalendarContainer

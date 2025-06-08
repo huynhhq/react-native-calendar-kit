@@ -294,6 +294,15 @@ export interface CalendarProviderProps extends ActionsProviderProps {
   maxDate?: DateType;
 
   /**
+   * Hide dates outside of minDate and maxDate when using numberOfDays < 7.
+   * When enabled, only dates within the minDate/maxDate range will be shown
+   * instead of filling complete weeks.
+   *
+   * - Default: `false`
+   */
+  hideOutOfRangeDates?: boolean;
+
+  /**
    * Initial display date.
    *
    * - Default: today
@@ -460,6 +469,16 @@ export interface CalendarProviderProps extends ActionsProviderProps {
    * Default: `true`
    */
   scrollToNow?: boolean;
+
+  /**
+   * Initial hour to scroll to when the calendar loads.
+   * Only takes effect when `scrollToNow` is `false`.
+   *
+   * Example: `8` for 8:00 AM, `14.5` for 2:30 PM
+   *
+   * Default: `undefined` (no initial scroll)
+   */
+  initialHour?: number;
 
   /**
    * Use haptic feedback

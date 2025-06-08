@@ -45,6 +45,7 @@ The `CalendarContainer` component accepts the following props:
 | `numberOfDays`              | number   | 7                | Number of days to display.                                          |
 | `scrollByDay`               | boolean  | -                | Whether to scroll by day or week.                                   |
 | `scrollToNow`               | boolean  | true             | Whether to scroll to the current time on load.                      |
+| `initialHour`               | number   | -                | Initial hour to scroll to when calendar loads (only when scrollToNow=false). |
 | `useHaptic`                 | boolean  | false            | Whether to use haptic feedback.                                     |
 | `dragStep`                  | number   | 15               | Step size for dragging events (in minutes).                         |
 | `allowDragToEdit`           | boolean  | false            | Whether to allow dragging to edit events.                           |

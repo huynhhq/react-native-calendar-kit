@@ -596,6 +596,7 @@ const Calendar = () => {
         }}
         dragToCreateMode={configs.dragToCreateMode}
         scrollToNow
+        // initialHour={8} // Uncomment and set scrollToNow={false} to scroll to 8:00 AM on load
         useHaptic
         allowDragToEdit
         allowDragToCreate

@@ -9,6 +9,7 @@ type CalendarRangeOptions = {
   isSingleDay: boolean;
   hideWeekDays?: WeekdayNumbers[];
   timeZone?: string;
+  hideOutOfRangeDates?: boolean;
 };
 
 export type DataByMode = {
@@ -78,7 +79,52 @@ export const prepareCalendarRange = (
     };
   }
 
-  // Multi-day Mode (week-based)
+  // Multi-day Mode
+  if (props.hideOutOfRangeDates) {
+    // Range-based mode: only show dates within minDate and maxDate
+    const visibleDates: Record<
+      string,
+      { unix: number; index: number; weekday: WeekdayNumbers }
+    > = {};
+    const visibleDatesArray: number[] = [];
+
+    let currentDateTime = min;
+    let index = 0;
+
+    // Iterate over days within the range, ensuring time zone and DST are accounted for
+    while (currentDateTime.toMillis() <= originalMaxDateUnix) {
+      const currentWeekDay = currentDateTime.weekday;
+      const dateUnix = currentDateTime.toMillis();
+
+      // Only include dates that are actually within the original range
+      if (dateUnix >= originalMinDateUnix && dateUnix <= originalMaxDateUnix) {
+        if (!props.hideWeekDays?.includes(currentWeekDay)) {
+          visibleDates[dateUnix] = {
+            unix: dateUnix,
+            index,
+            weekday: currentWeekDay,
+          };
+          visibleDatesArray.push(dateUnix);
+          index++;
+        }
+      }
+      currentDateTime = currentDateTime.plus({ days: 1 });
+    }
+
+    return {
+      count: visibleDatesArray.length,
+      minDateUnix: originalMinDateUnix,
+      maxDateUnix: originalMaxDateUnix,
+      originalMinDateUnix,
+      originalMaxDateUnix,
+      visibleDates,
+      visibleDatesArray,
+      diffMinDays: 0,
+      diffMaxDays: 0,
+    };
+  }
+
+  // Week-based mode: show complete weeks
   const minWeekDay = min.weekday;
   const diffToFirstDay = (minWeekDay - firstDay + 7) % 7;
   const adjustedMin = min.minus({ days: diffToFirstDay });

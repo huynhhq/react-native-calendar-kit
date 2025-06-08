@@ -102,6 +102,7 @@ const CalendarContainer: React.ForwardRefRenderFunction<
     numberOfDays: initialNumberOfDays = 7,
     scrollByDay: initialScrollByDay,
     scrollToNow = true,
+    initialHour,
     useHaptic = false,
     dragStep = 15,
     allowDragToEdit = false,
@@ -128,6 +129,7 @@ const CalendarContainer: React.ForwardRefRenderFunction<
     resources,
     animateColumnWidth = false,
     dragToCreateMode = 'duration',
+    hideOutOfRangeDates = false,
   },
   ref
 ) => {
@@ -184,7 +186,6 @@ const CalendarContainer: React.ForwardRefRenderFunction<
       : initialNumberOfDays;
 
   const isSingleDay = numberOfDays === 1;
-  const columns = isSingleDay ? 1 : daysToShow;
 
   const defaultLayout = useLayout();
   const calendarLayout = useMemo(() => {
@@ -212,9 +213,20 @@ const CalendarContainer: React.ForwardRefRenderFunction<
         isSingleDay,
         hideWeekDays,
         timeZone,
+        hideOutOfRangeDates,
       }),
-    [minDate, maxDate, firstDay, isSingleDay, hideWeekDays, timeZone]
+    [minDate, maxDate, firstDay, isSingleDay, hideWeekDays, timeZone, hideOutOfRangeDates]
   );
+
+  // Calculate columns based on the mode
+  const columns = useMemo(() => {
+    if (isSingleDay) return 1;
+    if (hideOutOfRangeDates) {
+      // In range-based mode, use the actual number of visible days
+      return Math.min(numberOfDays, calendarData.visibleDatesArray.length);
+    }
+    return daysToShow;
+  }, [isSingleDay, hideOutOfRangeDates, numberOfDays, calendarData.visibleDatesArray.length, daysToShow]);
 
   const slots = useMemo(
     () => calculateSlots(start, end, timeInterval),
@@ -269,7 +281,7 @@ const CalendarContainer: React.ForwardRefRenderFunction<
       return 0;
     }
     const nearestIndex = nearestDate.index;
-    if (isSingleDay || scrollByDay) {
+    if (isSingleDay || scrollByDay || hideOutOfRangeDates) {
       const colWidth = isSingleDay ? calendarGridWidth : columnWidth;
       return nearestIndex * colWidth;
     }
@@ -283,6 +295,7 @@ const CalendarContainer: React.ForwardRefRenderFunction<
     columnWidth,
     isSingleDay,
     scrollByDay,
+    hideOutOfRangeDates,
     visibleDateUnix,
   ]);
 
@@ -308,7 +321,7 @@ const CalendarContainer: React.ForwardRefRenderFunction<
     const date = parseDateTime(props?.date, { zone: timeZone });
     const isoDate = date.toISODate();
     let targetDateUnix = parseDateTime(isoDate).toMillis();
-    if (!scrollByDay) {
+    if (!scrollByDay && !hideOutOfRangeDates) {
       targetDateUnix = startOfWeek(isoDate, firstDay).toMillis();
     }
     const visibleDates = calendarData.visibleDatesArray;
@@ -316,7 +329,7 @@ const CalendarContainer: React.ForwardRefRenderFunction<
     const visibleDayIndex = visibleDates.indexOf(nearestUnix);
     if (visibleDayIndex !== -1) {
       let offset = 0;
-      if (isSingleDay || scrollByDay) {
+      if (isSingleDay || scrollByDay || hideOutOfRangeDates) {
         const colWidth = isSingleDay ? calendarGridWidth : columnWidth;
         offset = visibleDayIndex * colWidth;
       } else {
@@ -378,7 +391,7 @@ const CalendarContainer: React.ForwardRefRenderFunction<
 
       let nextOffset = 0;
       let nextVisibleDayIndex = 0;
-      if (isSingleDay || forceScrollByDay || scrollByDay) {
+      if (isSingleDay || forceScrollByDay || scrollByDay || hideOutOfRangeDates) {
         nextVisibleDayIndex = currentIndex + 1;
         const colWidth = isSingleDay ? calendarGridWidth : columnWidth;
         nextOffset = nextVisibleDayIndex * colWidth;
@@ -420,7 +433,7 @@ const CalendarContainer: React.ForwardRefRenderFunction<
 
       let nextOffset = 0;
       let nextVisibleDayIndex = 0;
-      if (isSingleDay || forceScrollByDay || scrollByDay) {
+      if (isSingleDay || forceScrollByDay || scrollByDay || hideOutOfRangeDates) {
         nextVisibleDayIndex = Math.max(currentIndex - 1, 0);
         const colWidth = isSingleDay ? calendarGridWidth : columnWidth;
         nextOffset = nextVisibleDayIndex * colWidth;
@@ -604,7 +617,7 @@ const CalendarContainer: React.ForwardRefRenderFunction<
   }, [columnWidthAnim, columnWidth, isSingleDay, animateColumnWidth]);
 
   const snapToInterval =
-    numberOfDays > 1 && scrollByDay && !isResourceMode
+    numberOfDays > 1 && (scrollByDay || hideOutOfRangeDates) && !isResourceMode
       ? columnWidth
       : undefined;
 
@@ -717,6 +730,9 @@ const CalendarContainer: React.ForwardRefRenderFunction<
   const _onLoad = useLatestCallback(() => {
     if (scrollToNow) {
       goToDate({ hourScroll: true, animatedHour: true });
+    } else if (initialHour !== undefined) {
+      // Scroll to the specified initial hour
+      goToHour(initialHour, false);
     }
     onLoad?.();
   });
